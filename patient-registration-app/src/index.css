@@ -42,7 +42,18 @@ h1 {
   margin-bottom: 2rem;
 }
 
-.form,
+.form {
+
+  display: flex;
+  flex-direction: column;
+  gap: 1rem; /* adds spacing between elements */
+  background: var(--card-bg);
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  margin-bottom: 2rem;
+}
+
 .sql-console {
   background: var(--card-bg);
   padding: 1.5rem;
@@ -51,7 +62,11 @@ h1 {
   margin-bottom: 2rem;
 }
 
-.form input,
+.form input {
+  display: block;
+  width: 100%;
+}
+
 .sql-console textarea {
   background: var(--input-bg);
   border: 1px solid var(--border-color);
