@@ -1,21 +1,29 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import PatientForm from './components/PatientForm';
 import SQLConsole from './components/SQLConsole';
 
 function App() {
   const [currentPage, setCurrentPage] = useState('home');
+  const [theme, setTheme] = useState(localStorage.getItem('theme') || 'dark');
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => setTheme(theme === 'light' ? 'dark' : 'light');
 
   const renderContent = () => {
     switch (currentPage) {
       case 'patient':
-        return <PatientForm />;
+        return <PatientForm theme={theme} />;
       case 'sql':
-        return <SQLConsole />;
+        return <SQLConsole theme={theme} />;
       default:
         return (
           <div style={styles.buttonContainer}>
             <button
-              style={{ ...styles.navButton, backgroundColor: '#fff', color: '#000' }}
+              style={{ ...styles.navButton, backgroundColor: theme === 'light' ? '#fff' : '#333', color: theme === 'light' ? '#000' : '#fff' }}
               onClick={() => setCurrentPage('patient')}
             >
               Register Patient
@@ -32,7 +40,7 @@ function App() {
   };
 
   return (
-    <div style={styles.container}>
+    <div style={{ ...styles.container, backgroundColor: theme === 'light' ? '#f5f5f5' : '#1a1a1a' }}>
       <header style={styles.header}>
         <div style={styles.logo}>
           <span style={styles.icon}>H</span>
@@ -57,6 +65,12 @@ function App() {
           >
             SQL Console Form
           </button>
+          <button 
+            onClick={toggleTheme} 
+            style={styles.themeButton}
+          >
+            {theme === 'light' ? '🌙' : '☀️'}
+          </button>
         </nav>
       </header>
 
@@ -70,7 +84,7 @@ function App() {
 const styles = {
   container: {
     minHeight: '100vh',
-    backgroundColor: '#1a1a1a',
+    transition: 'background-color 0.3s',
   },
   header: {
     display: 'flex',
@@ -102,6 +116,7 @@ const styles = {
   nav: {
     display: 'flex',
     gap: '2rem',
+    alignItems: 'center',
   },
   navLink: {
     color: '#fff',
@@ -125,6 +140,21 @@ const styles = {
     borderRadius: '4px',
     transition: 'background-color 0.2s',
   },
+  themeButton: {
+    background: 'none',
+    border: '1px solid rgba(255, 255, 255, 0.2)',
+    color: '#fff',
+    padding: '0.5rem',
+    borderRadius: '4px',
+    cursor: 'pointer',
+    fontSize: '1.2rem',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '40px',
+    height: '40px',
+    transition: 'all 0.2s',
+  },
   main: {
     padding: '2rem',
     display: 'flex',
@@ -146,7 +176,7 @@ const styles = {
     cursor: 'pointer',
     color: '#fff',
     fontWeight: '500',
-    transition: 'transform 0.2s',
+    transition: 'all 0.2s',
     minWidth: '200px',
   },
 };

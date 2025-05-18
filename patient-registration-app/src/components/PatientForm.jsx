@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import db from '../db/initDb';
 import { v4 as uuidv4 } from 'uuid';
 
-export default function PatientForm() {
+export default function PatientForm({ theme }) {
   const [form, setForm] = useState({ name: '', age: '', gender: '', contact: '' });
   const [toast, setToast] = useState(null);
   const channel = new BroadcastChannel('patient_sync');
@@ -43,13 +43,17 @@ export default function PatientForm() {
   return (
     <div style={styles.container}>
       {toast && <div style={styles.toast}>{toast}</div>}
-      <h2 style={styles.title}>Register Patient</h2>
+      <h2 style={{...styles.title, color: theme === 'light' ? '#000' : '#fff'}}>Register Patient</h2>
       <form onSubmit={handleSubmit} style={styles.form}>
         <div style={styles.formGroup}>
-          <label style={styles.label}>Patient Name</label>
+          <label style={{...styles.label, color: theme === 'light' ? '#000' : '#fff'}}>Patient Name</label>
           <input
             name="name"
-            style={styles.input}
+            style={{
+              ...styles.input,
+              backgroundColor: theme === 'light' ? '#fff' : '#333',
+              color: theme === 'light' ? '#000' : '#fff',
+            }}
             placeholder="Enter patient's name"
             value={form.name}
             onChange={handleChange}
@@ -58,12 +62,16 @@ export default function PatientForm() {
         </div>
 
         <div style={styles.formGroup}>
-          <label style={styles.label}>Age</label>
+          <label style={{...styles.label, color: theme === 'light' ? '#000' : '#fff'}}>Age</label>
           <input
             name="age"
             type="number"
-            style={styles.input}
-            placeholder="138"
+            style={{
+              ...styles.input,
+              backgroundColor: theme === 'light' ? '#fff' : '#333',
+              color: theme === 'light' ? '#000' : '#fff',
+            }}
+            placeholder="Enter patient's age"
             value={form.age}
             onChange={handleChange}
             required
@@ -71,9 +79,9 @@ export default function PatientForm() {
         </div>
 
         <div style={styles.formGroup}>
-          <label style={styles.label}>Gender</label>
+          <label style={{...styles.label, color: theme === 'light' ? '#000' : '#fff'}}>Gender</label>
           <div style={styles.radioGroup}>
-            <label style={styles.radioLabel}>
+            <label style={{...styles.radioLabel, color: theme === 'light' ? '#000' : '#fff'}}>
               <input
                 type="radio"
                 name="gender"
@@ -84,7 +92,7 @@ export default function PatientForm() {
               />
               Male
             </label>
-            <label style={styles.radioLabel}>
+            <label style={{...styles.radioLabel, color: theme === 'light' ? '#000' : '#fff'}}>
               <input
                 type="radio"
                 name="gender"
@@ -99,10 +107,14 @@ export default function PatientForm() {
         </div>
 
         <div style={styles.formGroup}>
-          <label style={styles.label}>Contact Details</label>
+          <label style={{...styles.label, color: theme === 'light' ? '#000' : '#fff'}}>Contact Details</label>
           <input
             name="contact"
-            style={styles.input}
+            style={{
+              ...styles.input,
+              backgroundColor: theme === 'light' ? '#fff' : '#333',
+              color: theme === 'light' ? '#000' : '#fff',
+            }}
             placeholder="Enter contact details"
             value={form.contact}
             onChange={handleChange}
@@ -117,72 +129,81 @@ export default function PatientForm() {
 
 const styles = {
   container: {
-    maxWidth: '600px',
+    width: '50%',
+    minWidth: '600px',
     margin: '0 auto',
     padding: '20px',
   },
   title: {
-    fontSize: '24px',
+    fontSize: '32px',
     color: '#fff',
-    marginBottom: '20px',
+    marginBottom: '30px',
+    textAlign: 'center',
   },
   form: {
     backgroundColor: 'rgba(169, 169, 169, 0.5)',
-    padding: '30px',
-    borderRadius: '10px',
+    padding: '40px',
+    borderRadius: '15px',
     backdropFilter: 'blur(10px)',
   },
   formGroup: {
-    marginBottom: '20px',
+    marginBottom: '25px',
   },
   label: {
     display: 'block',
-    marginBottom: '8px',
+    marginBottom: '10px',
     color: '#fff',
-    fontSize: '16px',
+    fontSize: '18px',
   },
   input: {
     width: '100%',
-    padding: '10px',
+    padding: '15px',
     fontSize: '16px',
     backgroundColor: '#333',
     border: 'none',
-    borderRadius: '5px',
+    borderRadius: '8px',
     color: '#fff',
     boxSizing: 'border-box',
   },
   radioGroup: {
     display: 'flex',
-    gap: '20px',
+    gap: '40px',
+    marginTop: '10px',
   },
   radioLabel: {
     display: 'flex',
     alignItems: 'center',
     color: '#fff',
     cursor: 'pointer',
+    fontSize: '16px',
   },
   radioInput: {
-    marginRight: '8px',
+    marginRight: '12px',
     cursor: 'pointer',
     accentColor: '#dc2626',
+    width: '20px',
+    height: '20px',
   },
   submitButton: {
     width: '100%',
-    padding: '12px',
-    fontSize: '16px',
+    padding: '15px',
+    fontSize: '18px',
     backgroundColor: '#dc2626',
     color: '#fff',
     border: 'none',
-    borderRadius: '5px',
+    borderRadius: '8px',
     cursor: 'pointer',
-    marginTop: '10px',
+    marginTop: '20px',
+    fontWeight: '500',
+    transition: 'background-color 0.2s',
   },
   toast: {
     backgroundColor: '#444',
     color: '#fff',
-    padding: '10px 20px',
-    borderRadius: '5px',
-    marginBottom: '20px',
+    padding: '15px 30px',
+    borderRadius: '8px',
+    marginBottom: '30px',
     textAlign: 'center',
+    fontSize: '16px',
   },
 };

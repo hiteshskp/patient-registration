@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import db from '../db/initDb';
 
-export default function SQLConsole() {
+export default function SQLConsole({ theme }) {
   const [query, setQuery] = useState('SELECT * FROM patients;');
   const [results, setResults] = useState([]);
   const [error, setError] = useState(null);
@@ -32,14 +32,18 @@ export default function SQLConsole() {
 
   return (
     <div style={styles.container}>
-      <h2 style={styles.title}>SQL Console</h2>
+      <h2 style={{...styles.title, color: theme === 'light' ? '#000' : '#fff'}}>SQL Console</h2>
       <div style={styles.consoleContainer}>
         <textarea
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           rows={8}
           placeholder="Enter SQL commands here..."
-          style={styles.textarea}
+          style={{
+            ...styles.textarea,
+            backgroundColor: theme === 'light' ? '#fff' : '#1a1a1a',
+            color: theme === 'light' ? '#000' : '#fff',
+          }}
         />
         <button 
           onClick={runQuery} 
@@ -56,12 +60,22 @@ export default function SQLConsole() {
         )}
 
         {results && results.length > 0 && (
-          <div style={styles.resultsContainer}>
-            <table style={styles.table}>
+          <div style={{
+            ...styles.resultsContainer,
+            backgroundColor: theme === 'light' ? '#fff' : '#1a1a1a',
+          }}>
+            <table style={{
+              ...styles.table,
+              backgroundColor: theme === 'light' ? '#fff' : '#1a1a1a',
+            }}>
               <thead>
                 <tr>
                   {Object.keys(results[0] || {}).map((key) => (
-                    <th key={key} style={styles.th}>{key}</th>
+                    <th key={key} style={{
+                      ...styles.th,
+                      backgroundColor: theme === 'light' ? '#f5f5f5' : '#333',
+                      color: theme === 'light' ? '#000' : '#fff',
+                    }}>{key}</th>
                   ))}
                 </tr>
               </thead>
@@ -69,7 +83,11 @@ export default function SQLConsole() {
                 {results.map((row, i) => (
                   <tr key={i}>
                     {Object.values(row).map((val, j) => (
-                      <td key={j} style={styles.td}>{val}</td>
+                      <td key={j} style={{
+                        ...styles.td,
+                        color: theme === 'light' ? '#000' : '#fff',
+                        borderBottom: `1px solid ${theme === 'light' ? '#eee' : '#333'}`,
+                      }}>{val}</td>
                     ))}
                   </tr>
                 ))}
@@ -79,7 +97,9 @@ export default function SQLConsole() {
         )}
 
         {results && results.length === 0 && !error && (
-          <div style={styles.noResults}>No results to display.</div>
+          <div style={{...styles.noResults, color: theme === 'light' ? '#000' : '#fff'}}>
+            No results to display.
+          </div>
         )}
       </div>
     </div>
@@ -88,81 +108,92 @@ export default function SQLConsole() {
 
 const styles = {
   container: {
-    maxWidth: '800px',
+    width: '50%',
+    minWidth: '800px',
     margin: '0 auto',
     padding: '20px',
   },
   title: {
-    fontSize: '24px',
+    fontSize: '32px',
     color: '#fff',
-    marginBottom: '20px',
+    marginBottom: '30px',
+    textAlign: 'center',
   },
   consoleContainer: {
     backgroundColor: 'rgba(169, 169, 169, 0.5)',
-    borderRadius: '10px',
-    padding: '30px',
+    borderRadius: '15px',
+    padding: '40px',
     backdropFilter: 'blur(10px)',
   },
   textarea: {
     width: '100%',
-    minHeight: '200px',
-    padding: '15px',
-    fontSize: '14px',
+    minHeight: '250px',
+    padding: '20px',
+    fontSize: '16px',
     fontFamily: 'monospace',
     backgroundColor: '#1a1a1a',
     color: '#fff',
     border: 'none',
-    borderRadius: '5px',
+    borderRadius: '8px',
     resize: 'vertical',
-    marginBottom: '20px',
+    marginBottom: '25px',
     boxSizing: 'border-box',
+    lineHeight: '1.5',
   },
   executeButton: {
     width: '100%',
-    padding: '12px',
-    fontSize: '16px',
+    padding: '15px',
+    fontSize: '18px',
     backgroundColor: '#dc2626',
     color: '#fff',
     border: 'none',
-    borderRadius: '5px',
+    borderRadius: '8px',
     cursor: 'pointer',
-    marginBottom: '20px',
+    marginBottom: '25px',
+    fontWeight: '500',
+    transition: 'background-color 0.2s',
   },
   error: {
     backgroundColor: 'rgba(220, 38, 38, 0.1)',
     color: '#dc2626',
-    padding: '12px',
-    borderRadius: '5px',
-    marginBottom: '20px',
+    padding: '15px',
+    borderRadius: '8px',
+    marginBottom: '25px',
     border: '1px solid #dc2626',
+    fontSize: '16px',
   },
   resultsContainer: {
     overflowX: 'auto',
-    marginTop: '20px',
+    marginTop: '25px',
+    borderRadius: '8px',
+    backgroundColor: '#1a1a1a',
   },
   table: {
     width: '100%',
     borderCollapse: 'collapse',
     backgroundColor: '#1a1a1a',
-    borderRadius: '5px',
+    borderRadius: '8px',
     overflow: 'hidden',
   },
   th: {
     textAlign: 'left',
-    padding: '12px',
+    padding: '15px 20px',
     backgroundColor: '#333',
     color: '#fff',
-    fontWeight: 'normal',
+    fontWeight: '500',
     borderBottom: '1px solid #444',
+    fontSize: '16px',
   },
   td: {
-    padding: '12px',
+    padding: '15px 20px',
     color: '#fff',
     borderBottom: '1px solid #333',
+    fontSize: '15px',
   },
   noResults: {
     color: '#fff',
     textAlign: 'center',
-    padding: '20px',
+    padding: '25px',
+    fontSize: '16px',
   },
 };
