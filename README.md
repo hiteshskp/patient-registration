@@ -2,7 +2,7 @@
 
 A modern, frontend-only patient registration system built with React and PGlite for data storage.
 
-🌐 **Live Demo**: [Visit Application](https://patient-registration.vercel.app)
+🌐 **Live Demo**: [Visit Application](https://patient-registration-mu.vercel.app)
 
 ## Features
 
@@ -10,6 +10,7 @@ A modern, frontend-only patient registration system built with React and PGlite 
   - Input validation
   - Real-time feedback
   - Automatic data persistence
+  - Loading and error states
 
 - 📊 SQL Query Console
   - Raw SQL query execution
@@ -19,24 +20,29 @@ A modern, frontend-only patient registration system built with React and PGlite 
 
 - 💾 Data Persistence
   - IndexedDB storage using PGlite
+  - WebAssembly-powered database
   - Data survives page refreshes
   - Proper database schema
+  - Robust error handling
 
 - 🔄 Multi-tab Synchronization
   - Real-time updates across tabs
   - Synchronized database operations
   - Consistent data state
+  - BroadcastChannel API
 
 - 🎨 Modern UI/UX
   - Dark/Light theme support
   - Responsive design
   - Toast notifications
   - Loading states
+  - Error boundaries
 
 ## Tech Stack
 
 - React + Vite
-- PGlite for database operations
+- PGlite (WebAssembly-based SQLite)
+- IndexedDB for persistence
 - BroadcastChannel API for tab synchronization
 - Modern CSS-in-JS styling
 
@@ -87,25 +93,44 @@ A modern, frontend-only patient registration system built with React and PGlite 
 1. Open the application in multiple tabs
 2. Make changes in one tab
 3. See real-time updates in other tabs
-4. Use different views simultaneously (e.g., Registration in one tab, SQL Console in another)
+4. Use different views simultaneously
 
-## Development Challenges
+## Development Challenges & Solutions
 
-1. **Database Schema Evolution**
-   - Challenge: Implementing auto-incrementing IDs with PGlite
-   - Solution: Used SERIAL type and proper PostgreSQL syntax
+1. **Database Initialization**
+   - Challenge: Reliable WebAssembly database setup
+   - Solution: Implemented robust initialization with proper error handling
 
 2. **Multi-tab Synchronization**
    - Challenge: Keeping data consistent across tabs
-   - Solution: Implemented BroadcastChannel API with proper error handling
+   - Solution: BroadcastChannel API with error handling and state management
 
-3. **Date Handling**
-   - Challenge: Proper rendering of timestamp data
-   - Solution: Added value formatting for different data types
+3. **Loading States**
+   - Challenge: Smooth user experience during async operations
+   - Solution: Added loading indicators and error boundaries
 
-4. **Form Validation**
-   - Challenge: Real-time validation with proper feedback
-   - Solution: Implemented client-side validation with clear error messages
+4. **Browser Compatibility**
+   - Challenge: WebAssembly and IndexedDB support
+   - Solution: Added browser checks and fallback mechanisms
+
+## Troubleshooting
+
+If you encounter a blank page:
+1. Clear browser cache and IndexedDB data
+2. Ensure WebAssembly is supported in your browser
+3. Check console for detailed error messages
+
+## Browser Support
+
+- Chrome 80+
+- Firefox 75+
+- Safari 13.1+
+- Edge 80+
+
+Requirements:
+- WebAssembly support
+- IndexedDB availability
+- JavaScript modules support
 
 ## Contributing
 
@@ -135,7 +160,7 @@ This application is deployed on Vercel. To deploy your own instance:
    ```
 5. Deploy:
    ```bash
-   vercel
+   vercel --prod
    ```
 
 The application will be deployed and you'll receive a unique URL for your instance.
