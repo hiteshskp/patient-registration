@@ -2,6 +2,8 @@
 
 A modern, frontend-only patient registration system built with React and PGlite for data storage.
 
+🌐 **Live Demo**: [Visit Application](https://patient-registration.vercel.app)
+
 ## Features
 
 - 🏥 Patient Registration Form
@@ -116,3 +118,24 @@ A modern, frontend-only patient registration system built with React and PGlite 
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details
+
+## Deployment
+
+This application is deployed on Vercel. To deploy your own instance:
+
+1. Fork this repository
+2. Sign up for a [Vercel account](https://vercel.com)
+3. Install Vercel CLI:
+   ```bash
+   npm install -g vercel
+   ```
+4. Login to Vercel:
+   ```bash
+   vercel login
+   ```
+5. Deploy:
+   ```bash
+   vercel
+   ```
+
+The application will be deployed and you'll receive a unique URL for your instance.
