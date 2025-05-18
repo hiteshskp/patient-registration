@@ -7,10 +7,14 @@ A modern, frontend-only patient registration system built with React and PGlite 
 ## Features
 
 - 🏥 Patient Registration Form
-  - Input validation
-  - Real-time feedback
+  - **Enhanced Input Validation**
+    - Name: Only allows letters, spaces, dots, and hyphens
+    - Age: Numeric only, limited to 2 digits (0-99)
+    - Mobile Number: Exactly 10 digits, numeric only
+    - Real-time validation with immediate feedback
   - Automatic data persistence
   - Loading and error states
+  - Form field sanitization
 
 - 📊 SQL Query Console
   - Raw SQL query execution
@@ -73,10 +77,10 @@ A modern, frontend-only patient registration system built with React and PGlite 
 
 1. Navigate to "Register Patient Form"
 2. Fill in the required fields:
-   - Patient Name
-   - Age
-   - Gender
-   - Contact Details (optional)
+   - Patient Name (letters, spaces, dots, and hyphens only)
+   - Age (0-99)
+   - Gender (Male/Female)
+   - Contact Details (10-digit mobile number)
 3. Click Submit
 4. Look for the success notification
 
@@ -90,35 +94,21 @@ A modern, frontend-only patient registration system built with React and PGlite 
 
 ### Multi-tab Usage
 
+The application supports real-time synchronization across multiple tabs:
 1. Open the application in multiple tabs
 2. Make changes in one tab
-3. See real-time updates in other tabs
-4. Use different views simultaneously
+3. See the changes reflect automatically in other tabs
+4. Last sync time is displayed for reference
 
-## Development Challenges & Solutions
+## Recent Updates
 
-1. **Database Initialization**
-   - Challenge: Reliable WebAssembly database setup
-   - Solution: Implemented robust initialization with proper error handling
-
-2. **Multi-tab Synchronization**
-   - Challenge: Keeping data consistent across tabs
-   - Solution: BroadcastChannel API with error handling and state management
-
-3. **Loading States**
-   - Challenge: Smooth user experience during async operations
-   - Solution: Added loading indicators and error boundaries
-
-4. **Browser Compatibility**
-   - Challenge: WebAssembly and IndexedDB support
-   - Solution: Added browser checks and fallback mechanisms
-
-## Troubleshooting
-
-If you encounter a blank page:
-1. Clear browser cache and IndexedDB data
-2. Ensure WebAssembly is supported in your browser
-3. Check console for detailed error messages
+### Version 1.1.0
+- Added enhanced input validation for patient registration
+- Fixed mobile number validation (10 digits only)
+- Fixed name field validation (no special characters)
+- Fixed age input validation (2 digits max)
+- Improved real-time validation feedback
+- Updated documentation
 
 ## Browser Support
 
@@ -127,22 +117,25 @@ If you encounter a blank page:
 - Safari 13.1+
 - Edge 80+
 
-Requirements:
-- WebAssembly support
-- IndexedDB availability
-- JavaScript modules support
+## Troubleshooting
+
+If you encounter issues:
+1. Clear browser cache and IndexedDB data
+2. Ensure WebAssembly is supported in your browser
+3. Check console for detailed error messages
+4. Verify input format matches validation requirements
 
 ## Contributing
 
 1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details
+This project is licensed under the MIT License - see the LICENSE file for details.
 
 ## Deployment
 

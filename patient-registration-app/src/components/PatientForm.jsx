@@ -12,8 +12,32 @@ export default function PatientForm({ theme, dbChannel }) {
   const [error, setError] = useState(null);
 
   const handleChange = (e) => {
-    const value = e.target.type === 'radio' ? e.target.value : e.target.value;
-    setForm(prev => ({ ...prev, [e.target.name]: value }));
+    let value = e.target.type === 'radio' ? e.target.value : e.target.value;
+    const name = e.target.name;
+
+    // Validation for contact (mobile number)
+    if (name === 'contact') {
+      // Remove any non-digit characters
+      value = value.replace(/\D/g, '');
+      // Limit to 10 digits
+      value = value.slice(0, 10);
+    }
+
+    // Validation for name (only letters, spaces and basic punctuation)
+    if (name === 'name') {
+      // Remove special characters except spaces, dots, and hyphens
+      value = value.replace(/[^a-zA-Z\s.-]/g, '');
+    }
+
+    // Validation for age (only numbers, max 2 digits)
+    if (name === 'age') {
+      // Remove any non-digit characters
+      value = value.replace(/\D/g, '');
+      // Limit to 2 digits
+      value = value.slice(0, 2);
+    }
+
+    setForm(prev => ({ ...prev, [name]: value }));
   };
 
   useEffect(() => {
@@ -82,21 +106,27 @@ export default function PatientForm({ theme, dbChannel }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Form validation
-    if (!form.name.trim()) {
-      setToast('⚠️ Patient name is required');
+    // Enhanced form validation
+    if (!form.name.trim() || !/^[a-zA-Z\s.-]+$/.test(form.name)) {
+      setToast('⚠️ Please enter a valid name (letters, spaces, dots, and hyphens only)');
       setTimeout(() => setToast(null), 3000);
       return;
     }
 
-    if (!form.age || isNaN(form.age) || form.age < 0) {
-      setToast('⚠️ Please enter a valid age');
+    if (!form.age || isNaN(form.age) || form.age < 0 || form.age > 99) {
+      setToast('⚠️ Please enter a valid age (0-99)');
       setTimeout(() => setToast(null), 3000);
       return;
     }
 
     if (!form.gender) {
       setToast('⚠️ Please select a gender');
+      setTimeout(() => setToast(null), 3000);
+      return;
+    }
+
+    if (form.contact && (form.contact.length !== 10 || !/^\d{10}$/.test(form.contact))) {
+      setToast('⚠️ Please enter a valid 10-digit mobile number');
       setTimeout(() => setToast(null), 3000);
       return;
     }
