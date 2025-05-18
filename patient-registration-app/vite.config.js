@@ -18,6 +18,16 @@ export default defineConfig({
     outDir: 'dist',
     sourcemap: true,
     minify: 'terser',
-    target: 'esnext'
+    target: 'esnext',
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          pglite: ['@electric-sql/pglite'],
+        },
+      },
+    },
+  },
+  worker: {
+    format: 'es',
   },
 });

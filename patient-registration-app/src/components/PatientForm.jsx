@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import db from '../db/initDb';
+import { getDb } from '../db/initDb';
 import { v4 as uuidv4 } from 'uuid';
 
 export default function PatientForm({ theme, dbChannel }) {
@@ -8,6 +8,8 @@ export default function PatientForm({ theme, dbChannel }) {
   const [patients, setPatients] = useState([]);
   const [lastSync, setLastSync] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const handleChange = (e) => {
     const value = e.target.type === 'radio' ? e.target.value : e.target.value;
@@ -15,41 +17,60 @@ export default function PatientForm({ theme, dbChannel }) {
   };
 
   useEffect(() => {
-    // Listen for database changes from other tabs
-    dbChannel.onmessage = (event) => {
-      const { type, data } = event.data;
-      if (type === 'PATIENT_ADDED') {
-        setPatients(prevPatients => [...prevPatients, data]);
-        setLastSync(new Date().toLocaleTimeString());
-        setToast('🔄 New patient registered in another tab!');
-        setTimeout(() => setToast(null), 3000);
-      } else if (type === 'PATIENTS_UPDATED') {
-        setPatients(data);
-        setLastSync(new Date().toLocaleTimeString());
+    const initializeDb = async () => {
+      try {
+        setIsLoading(true);
+        const db = await getDb();
+        
+        // Listen for database changes from other tabs
+        if (dbChannel) {
+          dbChannel.onmessage = (event) => {
+            const { type, data } = event.data;
+            if (type === 'PATIENT_ADDED') {
+              setPatients(prevPatients => [...prevPatients, data]);
+              setLastSync(new Date().toLocaleTimeString());
+              setToast('🔄 New patient registered in another tab!');
+              setTimeout(() => setToast(null), 3000);
+            } else if (type === 'PATIENTS_UPDATED') {
+              setPatients(data);
+              setLastSync(new Date().toLocaleTimeString());
+            }
+          };
+        }
+
+        // Initial load of patients
+        await loadPatients(db);
+      } catch (err) {
+        console.error('Error initializing:', err);
+        setError('Failed to initialize database. Please refresh the page.');
+      } finally {
+        setIsLoading(false);
       }
     };
 
-    // Initial load of patients
-    loadPatients();
+    initializeDb();
 
     return () => {
-      // No need to close dbChannel here as it's managed by App.jsx
+      // Cleanup if needed
     };
   }, []);
 
-  const loadPatients = async () => {
+  const loadPatients = async (dbInstance) => {
     try {
       console.log('Loading patients...');
+      const db = dbInstance || await getDb();
       const result = await db.query('SELECT * FROM patients ORDER BY id DESC');
       console.log('Load result:', result);
       
       if (result && result.rows) {
         setPatients(result.rows);
         // Broadcast the updated patients list to other tabs
-        dbChannel.postMessage({ 
-          type: 'PATIENTS_UPDATED', 
-          data: result.rows 
-        });
+        if (dbChannel) {
+          dbChannel.postMessage({ 
+            type: 'PATIENTS_UPDATED', 
+            data: result.rows 
+          });
+        }
       }
     } catch (error) {
       console.error('Error loading patients:', error);
@@ -83,6 +104,7 @@ export default function PatientForm({ theme, dbChannel }) {
     setIsSubmitting(true);
     try {
       console.log('Submitting form:', form);
+      const db = await getDb();
       
       // Insert new patient
       const result = await db.query(
@@ -94,10 +116,12 @@ export default function PatientForm({ theme, dbChannel }) {
 
       if (result && result.rows && result.rows[0]) {
         // Broadcast the new patient to other tabs
-        dbChannel.postMessage({ 
-          type: 'PATIENT_ADDED', 
-          data: result.rows[0] 
-        });
+        if (dbChannel) {
+          dbChannel.postMessage({ 
+            type: 'PATIENT_ADDED', 
+            data: result.rows[0] 
+          });
+        }
         
         // Update local state
         setPatients(prevPatients => [...prevPatients, result.rows[0]]);
@@ -169,6 +193,34 @@ export default function PatientForm({ theme, dbChannel }) {
       setTimeout(() => setToast(null), 3000);
     }
   };
+
+  if (isLoading) {
+    return (
+      <div style={{
+        ...styles.container,
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        color: theme === 'light' ? '#000' : '#fff'
+      }}>
+        Loading...
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div style={{
+        ...styles.container,
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        color: theme === 'light' ? '#000' : '#fff'
+      }}>
+        {error}
+      </div>
+    );
+  }
 
   return (
     <div style={styles.container}>

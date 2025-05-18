@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import PatientForm from './components/PatientForm';
 import SQLConsole from './components/SQLConsole';
+import { broadcast } from './db/initDb';
 
 function App() {
   const [currentPage, setCurrentPage] = useState('home');
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'dark');
+  const [dbChannel] = useState(() => broadcast);
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
@@ -16,9 +18,9 @@ function App() {
   const renderContent = () => {
     switch (currentPage) {
       case 'patient':
-        return <PatientForm theme={theme} />;
+        return <PatientForm theme={theme} dbChannel={dbChannel} />;
       case 'sql':
-        return <SQLConsole theme={theme} />;
+        return <SQLConsole theme={theme} dbChannel={dbChannel} />;
       default:
         return (
           <div style={styles.buttonContainer}>
