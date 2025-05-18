@@ -7,11 +7,12 @@ const db = new PGlite('idb://patient-db');
 
 await db.exec(`
   CREATE TABLE IF NOT EXISTS patients (
-    id INTEGER PRIMARY KEY,
+    id SERIAL PRIMARY KEY,
     name TEXT NOT NULL,
     age INTEGER NOT NULL, 
     gender TEXT NOT NULL,
-    contact TEXT
+    contact TEXT,
+    registered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
   );
 `);
 
