@@ -3,6 +3,7 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig({
   plugins: [react()],
+  base: '/',
   server: {
     fs: {
       // Allow serving files from project root (default is restrictive)
@@ -14,7 +15,9 @@ export default defineConfig({
     exclude: ['@electric-sql/pglite'],
   },
   build: {
-    // Ensure wasm files are correctly handled
-    target: 'esnext',
+    outDir: 'dist',
+    sourcemap: true,
+    minify: 'terser',
+    target: 'esnext'
   },
 });
