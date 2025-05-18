@@ -2,48 +2,196 @@ import React, { useState, useEffect } from 'react';
 import db from '../db/initDb';
 import { v4 as uuidv4 } from 'uuid';
 
-export default function PatientForm({ theme }) {
+export default function PatientForm({ theme, dbChannel }) {
   const [form, setForm] = useState({ name: '', age: '', gender: '', contact: '' });
   const [toast, setToast] = useState(null);
-  const channel = new BroadcastChannel('patient_sync');
+  const [patients, setPatients] = useState([]);
+  const [lastSync, setLastSync] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleChange = (e) => {
     const value = e.target.type === 'radio' ? e.target.value : e.target.value;
-    setForm({ ...form, [e.target.name]: value });
+    setForm(prev => ({ ...prev, [e.target.name]: value }));
+  };
+
+  useEffect(() => {
+    // Listen for database changes from other tabs
+    dbChannel.onmessage = (event) => {
+      const { type, data } = event.data;
+      if (type === 'PATIENT_ADDED') {
+        setPatients(prevPatients => [...prevPatients, data]);
+        setLastSync(new Date().toLocaleTimeString());
+        setToast('🔄 New patient registered in another tab!');
+        setTimeout(() => setToast(null), 3000);
+      } else if (type === 'PATIENTS_UPDATED') {
+        setPatients(data);
+        setLastSync(new Date().toLocaleTimeString());
+      }
+    };
+
+    // Initial load of patients
+    loadPatients();
+
+    return () => {
+      // No need to close dbChannel here as it's managed by App.jsx
+    };
+  }, []);
+
+  const loadPatients = async () => {
+    try {
+      console.log('Loading patients...');
+      const result = await db.query('SELECT * FROM patients ORDER BY id DESC');
+      console.log('Load result:', result);
+      
+      if (result && result.rows) {
+        setPatients(result.rows);
+        // Broadcast the updated patients list to other tabs
+        dbChannel.postMessage({ 
+          type: 'PATIENTS_UPDATED', 
+          data: result.rows 
+        });
+      }
+    } catch (error) {
+      console.error('Error loading patients:', error);
+      setToast('❌ Error loading patients');
+      setTimeout(() => setToast(null), 3000);
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const id = uuidv4();
-    const registeredAt = new Date().toISOString();
+    
+    // Form validation
+    if (!form.name.trim()) {
+      setToast('⚠️ Patient name is required');
+      setTimeout(() => setToast(null), 3000);
+      return;
+    }
 
-    await db.exec(
-      `INSERT INTO patients (id, name, age, gender, contact, registeredAt)
-       VALUES ('${id}', '${form.name}', ${form.age}, '${form.gender}', '${form.contact}', '${registeredAt}')`
-    );
+    if (!form.age || isNaN(form.age) || form.age < 0) {
+      setToast('⚠️ Please enter a valid age');
+      setTimeout(() => setToast(null), 3000);
+      return;
+    }
 
-    // Notify other tabs
-    channel.postMessage({ type: 'new_patient', payload: { id, ...form, registeredAt } });
+    if (!form.gender) {
+      setToast('⚠️ Please select a gender');
+      setTimeout(() => setToast(null), 3000);
+      return;
+    }
 
-    setToast('✅ Patient registered!');
-    setTimeout(() => setToast(null), 3000);
+    setIsSubmitting(true);
+    try {
+      console.log('Submitting form:', form);
+      
+      // Insert new patient
+      const result = await db.query(
+        'INSERT INTO patients (name, age, gender, contact) VALUES ($1, $2, $3, $4) RETURNING *',
+        [form.name, parseInt(form.age), form.gender, form.contact || '']
+      );
 
-    setForm({ name: '', age: '', gender: '', contact: '' });
+      console.log('Insert result:', result);
+
+      if (result && result.rows && result.rows[0]) {
+        // Broadcast the new patient to other tabs
+        dbChannel.postMessage({ 
+          type: 'PATIENT_ADDED', 
+          data: result.rows[0] 
+        });
+        
+        // Update local state
+        setPatients(prevPatients => [...prevPatients, result.rows[0]]);
+        
+        // Reset form
+        setForm({ name: '', age: '', gender: '', contact: '' });
+        
+        setToast('✅ Patient registered successfully!');
+        setTimeout(() => setToast(null), 3000);
+
+        // Reload patients to ensure consistency
+        await loadPatients();
+      } else {
+        throw new Error('Failed to get inserted patient data');
+      }
+    } catch (error) {
+      console.error('Error registering patient:', error);
+      setToast('❌ Error registering patient');
+      setTimeout(() => setToast(null), 3000);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  useEffect(() => {
-    channel.onmessage = (event) => {
-      if (event.data.type === 'new_patient') {
-        setToast('🔄 Patient data updated from another tab');
-        setTimeout(() => setToast(null), 3000);
-      }
-    };
-  }, []);
+  const exportToCSV = () => {
+    if (patients.length === 0) {
+      setToast('⚠️ No data to export');
+      setTimeout(() => setToast(null), 3000);
+      return;
+    }
+
+    try {
+      // Get headers from the first patient object
+      const headers = Object.keys(patients[0]);
+      
+      // Convert data to CSV format
+      const csvContent = [
+        headers.join(','), // Header row
+        ...patients.map(patient => 
+          headers.map(header => {
+            // Handle values that might contain commas or quotes
+            const value = patient[header]?.toString() || '';
+            if (value.includes(',') || value.includes('"') || value.includes('\n')) {
+              return `"${value.replace(/"/g, '""')}"`;
+            }
+            return value;
+          }).join(',')
+        )
+      ].join('\n');
+
+      // Create blob and download link
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      
+      link.setAttribute('href', url);
+      link.setAttribute('download', `patients_${new Date().toISOString().split('T')[0]}.csv`);
+      link.style.visibility = 'hidden';
+      
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      setToast('✅ CSV exported successfully!');
+      setTimeout(() => setToast(null), 3000);
+    } catch (error) {
+      console.error('Error exporting CSV:', error);
+      setToast('❌ Error exporting CSV');
+      setTimeout(() => setToast(null), 3000);
+    }
+  };
 
   return (
     <div style={styles.container}>
       {toast && <div style={styles.toast}>{toast}</div>}
-      <h2 style={{...styles.title, color: theme === 'light' ? '#000' : '#fff'}}>Register Patient</h2>
+      <div style={styles.header}>
+        <h2 style={{...styles.title, color: theme === 'light' ? '#000' : '#fff'}}>Register Patient</h2>
+        <div style={styles.headerControls}>
+          <div style={{...styles.stats, color: theme === 'light' ? '#000' : '#fff'}}>
+            <span>Total Records: {patients.length}</span>
+            {lastSync && <span>Last Sync: {lastSync}</span>}
+          </div>
+          <button
+            onClick={exportToCSV}
+            style={{
+              ...styles.exportButton,
+              backgroundColor: theme === 'light' ? '#fff' : '#333',
+              color: theme === 'light' ? '#000' : '#fff',
+            }}
+          >
+            📥 Export CSV
+          </button>
+        </div>
+      </div>
       <form onSubmit={handleSubmit} style={styles.form}>
         <div style={styles.formGroup}>
           <label style={{...styles.label, color: theme === 'light' ? '#000' : '#fff'}}>Patient Name</label>
@@ -66,6 +214,7 @@ export default function PatientForm({ theme }) {
           <input
             name="age"
             type="number"
+            min="0"
             style={{
               ...styles.input,
               backgroundColor: theme === 'light' ? '#fff' : '#333',
@@ -89,6 +238,7 @@ export default function PatientForm({ theme }) {
                 checked={form.gender === 'Male'}
                 onChange={handleChange}
                 style={styles.radioInput}
+                required
               />
               Male
             </label>
@@ -100,6 +250,7 @@ export default function PatientForm({ theme }) {
                 checked={form.gender === 'Female'}
                 onChange={handleChange}
                 style={styles.radioInput}
+                required
               />
               Female
             </label>
@@ -121,7 +272,17 @@ export default function PatientForm({ theme }) {
           />
         </div>
 
-        <button type="submit" style={styles.submitButton}>Submit</button>
+        <button 
+          type="submit" 
+          style={{
+            ...styles.submitButton,
+            opacity: isSubmitting ? 0.7 : 1,
+            cursor: isSubmitting ? 'not-allowed' : 'pointer'
+          }}
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? 'Registering...' : 'Submit'}
+        </button>
       </form>
     </div>
   );
@@ -205,5 +366,33 @@ const styles = {
     marginBottom: '30px',
     textAlign: 'center',
     fontSize: '16px',
+  },
+  header: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: '30px',
+  },
+  stats: {
+    display: 'flex',
+    gap: '20px',
+    fontSize: '14px',
+    opacity: 0.8,
+  },
+  headerControls: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '20px',
+  },
+  exportButton: {
+    padding: '8px 16px',
+    borderRadius: '4px',
+    border: '1px solid rgba(169, 169, 169, 0.2)',
+    cursor: 'pointer',
+    fontSize: '14px',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
+    transition: 'all 0.2s',
   },
 };
