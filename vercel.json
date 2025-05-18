@@ -4,13 +4,20 @@
     {
       "src": "patient-registration-app/package.json",
       "use": "@vercel/static-build",
-      "config": { "distDir": "dist" }
+      "config": {
+        "distDir": "patient-registration-app/dist",
+        "buildCommand": "cd patient-registration-app && npm install && npm run build"
+      }
     }
   ],
   "routes": [
     {
+      "src": "/assets/(.*)",
+      "dest": "/patient-registration-app/dist/assets/$1"
+    },
+    {
       "src": "/(.*)",
-      "dest": "patient-registration-app/dist/$1"
+      "dest": "/patient-registration-app/dist/index.html"
     }
   ]
 } 
